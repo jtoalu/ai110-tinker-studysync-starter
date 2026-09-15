@@ -62,3 +62,5 @@ pytest
 - `test_scoring.py` — starting point for your own tests
 
 Your instructor will tell you which tinker you're on. Follow the activity on the course portal.
+
+# Keep my email addresses private
