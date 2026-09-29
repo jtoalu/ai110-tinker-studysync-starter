@@ -52,6 +52,9 @@ def find_conflicts(sessions: list) -> list:
 def render_session_log_tab():
     import streamlit as st
 
+    if "fixed_count" not in st.session_state:
+        st.session_state.fixed_count = 0
+
     st.subheader("Parts 1-2: Log a Session")
 
     # BUG (Part 1): this is a plain local variable, so Streamlit "forgets" it on every rerun.
@@ -63,8 +66,8 @@ def render_session_log_tab():
     # TODO (Part 1): initialize st.session_state.fixed_count once, then
     # increment it here instead of the broken counter above.
     if st.button("Log a session (fixed)"):
-        pass
-    st.metric("Sessions logged (fixed)", 0)  # TODO: display st.session_state.fixed_count.
+        st.session_state.fixed_count += 1
+    st.metric("Sessions logged (fixed)", st.session_state.fixed_count)
 
     st.divider()
     st.subheader("Part 2: Session List (with validation)")
