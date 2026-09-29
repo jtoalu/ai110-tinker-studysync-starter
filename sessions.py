@@ -41,9 +41,8 @@ def next_occurrence(last_date: date, frequency: str) -> date:
     Return the next scheduled date given the last session date and a
     frequency label ("daily" or "weekly"), using FREQUENCY_DAYS and timedelta.
     """
-    # TODO (Part 4): look up the day count for `frequency` in FREQUENCY_DAYS
-    # and add that many days to last_date using timedelta.
-    raise NotImplementedError
+    days = FREQUENCY_DAYS[frequency]
+    return last_date + timedelta(days=days)
 
 
 def find_conflicts(sessions: list) -> list:
@@ -53,9 +52,12 @@ def find_conflicts(sessions: list) -> list:
     Return a list of (session_a, session_b) tuples for every pair that shares
     the same "slot". Must NOT crash on an empty list or a list with no conflicts.
     """
-    # TODO (Part 4): implement without crashing on empty input. A simple
-    # nested loop comparing each pair once is fine.
-    raise NotImplementedError
+    conflicts = []
+    for index, session in enumerate(sessions):
+        for other in sessions[index + 1:]:
+            if session["slot"] == other["slot"]:
+                conflicts.append((session, other))
+    return conflicts
 
 
 def render_session_log_tab():
@@ -115,15 +117,18 @@ def render_session_log_tab():
 if __name__ == "__main__":
     plain = PlainSession("Study group: Calc II", 45, priority="high")
     print(plain)
-    session_dc = SessionDC("Study group: Calc II", 45, priority="high")
-    print(session_dc)
     # TODO (Part 3): create a SessionDC with the same values and print it too --
     # compare the two __repr__ outputs and the amount of code each required.
+    session_dc = SessionDC("Study group: Calc II", 45, priority="high")
+    print(session_dc)
 
-    print(next_occurrence(date(2026, 1, 1), "daily"))
-    print(next_occurrence(date(2026, 1, 1), "weekly"))
+    current_date = date.today()
+    print("Current date:", current_date)
+    print("Next occurrence (daily):", next_occurrence(current_date, "daily"))
+    print("Next occurrence (weekly):", next_occurrence(current_date, "weekly"))
 
     print(
+        "Conflict sessions:",
         find_conflicts(
             [
                 {"subject": "Calc II", "slot": "08:00"},
@@ -132,4 +137,4 @@ if __name__ == "__main__":
             ]
         )
     )
-    print(find_conflicts([]))
+    print("Conflict sessions (none):", find_conflicts([]))
