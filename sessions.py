@@ -26,6 +26,15 @@ class PlainSession:
 # a @dataclass with the same three fields as PlainSession: subject, minutes,
 # priority="medium".
 
+from dataclasses import dataclass
+
+@dataclass
+class SessionDC:
+    subject: str
+    minutes: int
+    priority: str = "medium"
+    def __repr__(self):
+        return f"SessionDC(subject={self.subject!r}, minutes={self.minutes}, priority={self.priority!r})"
 
 def next_occurrence(last_date: date, frequency: str) -> date:
     """
@@ -79,9 +88,12 @@ def render_session_log_tab():
     duration = st.number_input("Duration (minutes)", value=30, step=1)
 
     if st.button("Add session"):
-        # TODO (Part 2): reject an empty/whitespace-only subject and a
-        # duration that isn't > 0. Show st.error(...) instead of appending.
-        st.session_state.mini_sessions.append({"subject": subject, "duration": duration})
+        if not subject.strip():
+            st.error("Subject cannot be empty.")
+        elif duration <= 0:
+            st.error("Duration must be greater than 0.")
+        else:
+            st.session_state.mini_sessions.append({"subject": subject, "duration": duration})
 
     st.write(st.session_state.mini_sessions)
 
@@ -103,6 +115,8 @@ def render_session_log_tab():
 if __name__ == "__main__":
     plain = PlainSession("Study group: Calc II", 45, priority="high")
     print(plain)
+    session_dc = SessionDC("Study group: Calc II", 45, priority="high")
+    print(session_dc)
     # TODO (Part 3): create a SessionDC with the same values and print it too --
     # compare the two __repr__ outputs and the amount of code each required.
 
