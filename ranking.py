@@ -40,26 +40,45 @@ def score_study_spot(profile: dict, spot: dict) -> tuple:
     # (compare using NOISE_ORDER), distance_miles vs max_distance, and
     # seats_available vs min_seats. Append a short string to `reasons` for
     # each factor that contributed, whether it helped or hurt the score.
-    score = 0
+    score = 0.0
     reasons = []
 
-    if NOISE_ORDER[spot["noise_level"]] <= NOISE_ORDER[profile["max_noise"]]:
+    noise_rank = NOISE_ORDER[spot["noise_level"]]
+    max_noise_rank = NOISE_ORDER[profile["max_noise"]]
+    if noise_rank <= max_noise_rank:
         score += 1
         reasons.append("quiet enough")
+        if noise_rank < max_noise_rank:
+            bonus = (max_noise_rank - noise_rank) * 0.25
+            score += bonus
+            reasons.append(f"quieter than allowed (+{bonus:.2f})")
     else:
         score -= 1
         reasons.append("too noisy")
 
-    if spot["distance_miles"] <= profile["max_distance"]:
+    max_distance = profile["max_distance"]
+    distance = spot["distance_miles"]
+    if distance <= max_distance:
         score += 1
         reasons.append("close enough")
+        if max_distance > 0:
+            bonus = 0.5 * (max_distance - distance) / max_distance
+            score += bonus
+            if bonus > 0:
+                reasons.append(f"closer than the maximum (+{bonus:.2f})")
     else:
         score -= 1
         reasons.append("too far")
 
-    if spot["seats_available"] >= profile["min_seats"]:
+    min_seats = profile["min_seats"]
+    seats = spot["seats_available"]
+    if seats >= min_seats:
         score += 1
         reasons.append("enough seats")
+        bonus = 0.5 * min((seats - min_seats) / max(min_seats, 1), 1)
+        score += bonus
+        if bonus > 0:
+            reasons.append(f"extra seats (+{bonus:.2f})")
     else:
         score -= 1
         reasons.append("not enough seats")
@@ -73,14 +92,24 @@ def rank_study_spots(profile: dict, spots: list, k: int = 3) -> list:
     """
     # TODO: score every spot with score_study_spot(), then use
     # sorted(..., key=..., reverse=True)[:k] to keep only the top k.
-    raise NotImplementedError
+    scored_spots = []
+
+    for spot in spots:
+        score, reasons = score_study_spot(profile, spot)
+        scored_spots.append((spot, score, reasons))
+
+    return sorted(scored_spots, key=lambda result: result[1], reverse=True)[:k]
 
 
 def format_results(ranked: list) -> None:
     """Print each ranked study spot with its score and reasons, one line each."""
     # TODO: for each (spot, score, reasons) tuple, print a readable line, e.g.:
     # "1. Innovation Commons -- Score: 5.0 -- Because: quiet enough, close enough"
-    raise NotImplementedError
+    for number, (spot, score, reasons) in enumerate(ranked, start=1):
+        print(
+            f"{number}. {spot['name']} -- Score: {score:.1f} "
+            f"-- Because: {', '.join(reasons)}"
+        )
 
 
 def render_study_spot_tab():
@@ -122,6 +151,7 @@ if __name__ == "__main__":
     )    
     assert spots, "No study spots were loaded from the CSV."
 
+    ''' this section is for testing the scoring of specific spots against the profile 
     spot_numbers = (1, 3, 5)
     assert len(spots) >= max(spot_numbers), "The CSV must contain at least 5 spots."
 
@@ -156,5 +186,6 @@ if __name__ == "__main__":
         assert score == expected_score, f"Unexpected score for spot #{spot_number}: {spot['name']}"
         assert reasons == expected_reasons, f"Unexpected reasons for spot #{spot_number}: {spot['name']}"
         print(f"PASS: Spot #{spot_number} ({spot['name']}) -- Score: {score} -- Because: {', '.join(reasons)}")
-    ranked = rank_study_spots(profile, spots, k=3)
+    '''
+    ranked = rank_study_spots(profile, spots, k=len(spots))
     format_results(ranked)
